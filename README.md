@@ -109,17 +109,29 @@ Would you like to add more items to get the discount? (yes/no):
 📄 Output Example (Saved File: Alice.txt)
 yaml
 Copy
+
 Edit
+
 Cappuccino x 2 = ₹198.0
+
 Tea x 1 = ₹19.0
+
 Pizza x 1 = ₹149.0
+
 Total: ₹366.0
+
 Discount: ₹0.0
+
 Final Bill: ₹366.0
+
 ❗ Error Handling
+
 Type	Description
+
 CafeException	Custom errors like invalid menu choice or quantity
+
 NumberFormatException	Catches non-numeric inputs
+
 IOException	Catches file write errors
 
 ✍️ Author
