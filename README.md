@@ -62,6 +62,7 @@ Copy
 Edit
 CafeApp.java           // Main application file
 order_filename.txt     // Generated per customer (e.g., John_Doe.txt)
+
 🚀 How to Run
 ✅ Prerequisites:
 JDK 8 or above
@@ -99,13 +100,16 @@ Here is our menu:
 
 Enter the number of the item you want to order (or 0 to finish):
 1
+
 How many Cappuccino(s) would you like to order?
 2
 ...
 
 You're ₹15.00 away from getting a 5% discount.
+
 Would you like to add more items to get the discount? (yes/no):
 ...
+
 📄 Output Example (Saved File: Alice.txt)
 yaml
 Copy
