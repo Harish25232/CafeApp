@@ -1,0 +1,226 @@
+import java.util.*;
+import java.io.*;
+
+// Custom exception for handling cafe-specific errors
+class CafeException extends Exception {
+    public CafeException(String message) {
+        super(message);
+    }
+}
+
+// Represents a menu item in the cafe
+class MenuItem {
+    private String name;
+    private double price;
+
+    public MenuItem(String name, double price) {
+        this.name = name;
+        this.price = price;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+}
+
+public class CafeApp {
+    private static List<MenuItem> menu = new ArrayList<>();
+
+    // Static initializer block to populate the menu
+    static {
+        menu.add(new MenuItem("Cappuccino", 99));
+        menu.add(new MenuItem("Tea", 19));
+        menu.add(new MenuItem("Burger", 79));
+        menu.add(new MenuItem("Pizza", 149));
+        menu.add(new MenuItem("Pasta", 119));
+        menu.add(new MenuItem("Salad", 99));
+        menu.add(new MenuItem("Soda", 29));
+        menu.add(new MenuItem("Nannari", 25));
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        String customerName;
+
+        // Get valid customer name
+        while (true) {
+            System.out.print("Enter your name: ");
+            customerName = scanner.nextLine().trim();
+
+            if (customerName.matches("\\d+")) {
+                System.out.println("Invalid input: Name cannot be all digits. Please enter a valid name.");
+            } else if (customerName.isEmpty()) {
+                System.out.println("Invalid input: Name cannot be empty.");
+            } else {
+                break;
+            }
+        }
+
+        String filename = customerName.replaceAll("\\s+", "_") + ".txt";
+        File customerFile = new File(filename);
+
+        System.out.println("\nWelcome to Team Kalisi Cafe, " + customerName + "!");
+        System.out.println("Here is our menu:");
+        displayMenu();
+
+        try {
+            double totalBill = 0;
+            StringBuilder orderSummary = new StringBuilder();
+
+            while (true) {
+                System.out.println("Enter the number of the item you want to order (or 0 to finish): ");
+                int choice = Integer.parseInt(scanner.nextLine());
+
+                if (choice == 0) break;
+
+                if (choice < 1 || choice > menu.size()) {
+                    throw new CafeException("Invalid menu item number. Please try again.");
+                }
+
+                MenuItem item = menu.get(choice - 1);
+
+                System.out.println("How many " + item.getName() + "(s) would you like to order?");
+                int qty = Integer.parseInt(scanner.nextLine());
+
+                if (qty < 1) {
+                    throw new CafeException("Invalid quantity. Please enter a positive number.");
+                }
+
+                double itemTotal = item.getPrice() * qty;
+                totalBill += itemTotal;
+
+                orderSummary.append(item.getName()).append(" x ").append(qty)
+                        .append(" = ₹").append(itemTotal).append("\n");
+            }
+
+            if (totalBill == 0) {
+                System.out.println("No items ordered. Exiting...");
+                return;
+            }
+
+            System.out.println("\n---- Order Summary ----");
+            System.out.print(orderSummary);
+
+            System.out.println("Total: ₹" + totalBill);
+
+            // Suggest if close to a discount
+            if ((totalBill >= 490 && totalBill < 500) || (totalBill >= 990 && totalBill < 1000)) {
+                double threshold = totalBill < 500 ? 500 : 1000;
+                double difference = threshold - totalBill;
+                int discount = totalBill < 500 ? 5 : 10;
+
+                System.out.printf(" You're ₹%.2f away from getting a %d%% discount.\n", difference, discount);
+                System.out.print("Would you like to add more items to get the discount? (yes/no): ");
+                String addMore = scanner.nextLine().trim().toLowerCase();
+
+                while (addMore.equals("yes")) {
+                    displayMenu();
+                    System.out.println("Enter the number of the item you want to add (or 0 to stop adding): ");
+                    int extraChoice = Integer.parseInt(scanner.nextLine());
+
+                    if (extraChoice == 0) break;
+
+                    if (extraChoice < 1 || extraChoice > menu.size()) {
+                        System.out.println("Invalid item number. Try again.");
+                        continue;
+                    }
+
+                    MenuItem extraItem = menu.get(extraChoice - 1);
+                    System.out.println("How many " + extraItem.getName() + "(s) would you like to add?");
+                    int extraQty = Integer.parseInt(scanner.nextLine());
+
+                    if (extraQty < 1) {
+                        System.out.println("Invalid quantity. Skipping.");
+                        continue;
+                    }
+
+                    double extraTotal = extraItem.getPrice() * extraQty;
+                    totalBill += extraTotal;
+
+                    orderSummary.append(extraItem.getName()).append(" x ").append(extraQty)
+                            .append(" = ₹").append(extraTotal).append("\n");
+
+                    System.out.println("Updated total: ₹" + totalBill);
+
+                    if ((threshold == 500 && totalBill >= 500) || (threshold == 1000 && totalBill >= 1000)) {
+                        System.out.println(" You've reached the amount to get a discount!");
+                        break;
+                    } else {
+                        double newDiff = threshold - totalBill;
+                        System.out.printf(" Add ₹%.2f more to get the %d%% discount.\n", newDiff, discount);
+                        System.out.print("Would you like to add more? (yes/no): ");
+                        addMore = scanner.nextLine().trim().toLowerCase();
+                    }
+                }
+            }
+
+            double discountAmount = applyDiscount(totalBill);
+            double finalBill = totalBill - discountAmount;
+
+            System.out.println("Discount applied: ₹" + discountAmount);
+            System.out.println("Your final total bill is: ₹" + finalBill);
+
+            orderSummary.append("Total: ₹").append(totalBill).append("\n")
+                    .append("Discount: ₹").append(discountAmount).append("\n")
+                    .append("Final Bill: ₹").append(finalBill).append("\n");
+
+            // Ask for confirmation
+            System.out.print("\nDo you want to confirm your order? (yes/no): ");
+            String confirm = scanner.nextLine().trim().toLowerCase();
+
+            if (confirm.equals("yes") || confirm.equals("y")) {
+                writeOrderToFile(customerFile, orderSummary.toString());
+
+                int token = new Random().nextInt(9000) + 1000;
+
+                System.out.println("\n Order Placed Successfully!");
+                System.out.println(" Token Number: " + token);
+                System.out.println(" Estimated time: 15 seconds");
+                System.out.println(" Thank you for waiting...");
+                System.out.println(" Thank you for choosing our Cafe, " + customerName + "! Have a great day!");
+            } else {
+                System.out.println(" Order cancelled.");
+            }
+
+        } catch (NumberFormatException e) {
+            System.out.println("Error: Invalid input format. Please enter a valid number.");
+        } catch (CafeException e) {
+            System.out.println("Error: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Error: Something went wrong. Please try again.");
+        } finally {
+            scanner.close();
+        }
+    }
+
+    private static void displayMenu() {
+        for (int i = 0; i < menu.size(); i++) {
+            System.out.println((i + 1) + ". " + menu.get(i).getName() + " - ₹" + menu.get(i).getPrice());
+        }
+    }
+
+    private static double applyDiscount(double totalBill) {
+        double discount = 0;
+        if (totalBill >= 1000) {
+            discount = totalBill * 0.10;
+            System.out.println("A 10% discount is applied.");
+        } else if (totalBill >= 500) {
+            discount = totalBill * 0.05;
+            System.out.println("A 5% discount is applied.");
+        }
+        return discount;
+    }
+
+    private static void writeOrderToFile(File file, String content) {
+        try (FileWriter writer = new FileWriter(file, false)) {
+            writer.write(content);
+            System.out.println("Order details saved to file: " + file.getName());
+        } catch (IOException e) {
+            System.out.println("Error writing to file: " + e.getMessage());
+        }
+    }
+}
